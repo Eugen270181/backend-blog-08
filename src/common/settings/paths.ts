@@ -9,9 +9,11 @@ export const routersPaths = {
     auth:'/auth',
     inAuth: {
         login: '/login',
-        registration: '/registration',
         me: '/me',
+        registration: '/registration',
         registrationConfirmation: '/registration-confirmation',
-        registrationEmailResending: '/registration-email-resending'
+        registrationEmailResending: '/registration-email-resending',
+        refreshToken: '/refresh-token',
+        logout: '/logout'
     }
 }

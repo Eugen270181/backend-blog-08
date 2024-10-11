@@ -12,8 +12,9 @@ export const appConfig = {
     COMMENT_COLLECTION_NAME:process.env.COMMENT_COLLECTION_NAME || 'Comments',
 
     AT_SECRET:process.env.DB_NAME as string || 'f1f5deg4hy5fr5d5g',
-    AT_TIME: process.env.AT_TIME as string || '1h',
+    AT_TIME: process.env.AT_TIME as string || '10s',
     RT_SECRET: process.env.RT_SECRET as string,
+    RT_TIME: process.env.AT_TIME as string || '20s',
     DB_TYPE: process.env.DB_TYPE as string,
     EMAIL: process.env.EMAIL as string,
     EMAIL_PASS: process.env.EMAIL_PASS as string,

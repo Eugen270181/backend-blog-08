@@ -48,8 +48,8 @@ export const usersQueryRepository = {
 
     },
     mapUser(user:WithId<UserDbModel>):UserOutputModel{
-        const { _id, passwordHash,createdAt,emailConfirmation,...userForOutPut} = user;//деструктуризация
-        return {id:user._id.toString(),createdAt:user.createdAt.toISOString(),...userForOutPut}
+        const { _id,createdAt,login, email} = user;//деструктуризация
+        return { id:user._id.toString(), createdAt:user.createdAt.toISOString(), login, email }
     },
     mapMe(user:WithId<UserDbModel>):MeOutputModel{
         const { _id,email, login} = user;//деструктуризация

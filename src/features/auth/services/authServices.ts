@@ -13,6 +13,7 @@ import {UserDbModel} from "../../users/types/userDb.model";
 import {LoginSuccessOutputModel} from "../types/output/loginSuccessOutput.model";
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns/add';
+import {appConfig} from "../../../common/settings/config";
 
 export const authServices = {
     async loginUser(login:LoginInputModel) {
@@ -26,10 +27,11 @@ export const authServices = {
             return result
         }
         //если данные для входа валидны, то генеирруем токен для пользователя по его id
-        const accessToken = await jwtServices.createToken(user.data!._id.toString())
+        const accessToken = await jwtServices.createToken(user.data!._id.toString(),appConfig.AT_SECRET,appConfig.AT_TIME)
+        const refreshToken = await jwtServices.createToken(user.data!._id.toString(),appConfig.RT_SECRET,appConfig.RT_TIME)
         //возвращаем статус успех и сам токен в объекте
         result.status = ResultStatus.Success
-        result.data = {accessToken}
+        result.data = {accessToken,refreshToken}
 
         return result
     },

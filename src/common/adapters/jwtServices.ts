@@ -5,12 +5,12 @@ import {IdType} from "../types/id.type";
 
 
 export const jwtServices = {
-    async createToken(id: string): Promise<string> {
+    async createToken(id: string,secretKey:string,expirationTime:string): Promise<string> {
         return jwt.sign(
             {id},
-            appConfig.AT_SECRET,
+            secretKey,
             {
-                expiresIn: appConfig.AT_TIME,
+                expiresIn: expirationTime,
             }
         );
     },
