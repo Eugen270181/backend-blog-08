@@ -10,6 +10,7 @@ import {regConfirmAuthController} from "./controllers/regConfirmAuthController";
 import {regConfirmAuthValidators} from "./middlewares/regConfirmAuthValidators";
 import {emailResendingAuthValidators} from "./middlewares/regEmailResendingValidators";
 import {emailResendingAuthController} from "./controllers/emailResendingAuthController";
+import {refreshTokenAuthController} from "./controllers/refreshTokenAuthController";
 import {logoutAuthController} from "./controllers/logoutAuthController";
 export const authRouter = Router()
 
@@ -21,7 +22,7 @@ authRouter.post(routersPaths.inAuth.registration, registrationAuthValidators, re
 authRouter.post(routersPaths.inAuth.registrationConfirmation, regConfirmAuthValidators, regConfirmAuthController)
 authRouter.post(routersPaths.inAuth.registrationEmailResending, emailResendingAuthValidators, emailResendingAuthController)
 //logout(reqirements - In cookie client must send correct refreshToken that will be revoked.)
-authRouter.post(routersPaths.inAuth.logout, refreshTokenMiddleware, logoutAuthController)
+authRouter.post(routersPaths.inAuth.logout, logoutAuthController)
 //refresh-token(reqirements - Generate a new pair of access and refresh tokens (in cookie client must send correct refreshToken that will be revoked after refreshing)
-authRouter.post(routersPaths.inAuth.refreshToken, refreshTokenMiddleware, refreshTokenAuthController)
+authRouter.post(routersPaths.inAuth.refreshToken, refreshTokenAuthController)
 

@@ -8,14 +8,15 @@ import {ResultStatus} from "../../../common/types/enum/resultStatus";
 //import cookieParser from "cookie-parser";
 
 
-export const loginAuthController = async (req: RequestWithBody<LoginInputModel>, res: Response<{accessToken:LoginSuccessOutputModel['accessToken']}>) => {
-    const isLogin = await authServices.loginUser(req.body)
-    if (isLogin.status === ResultStatus.Unauthorized) return res.sendStatus(HttpStatus.Unauthorized)
+export const loginAuthController = async (req: RequestWithBody<LoginInputModel>, res: Response<LoginSuccessOutputModel>) => {
+    const result = await authServices.loginUser(req.body)
 
-    res.cookie("refreshToken",isLogin.data!.refreshToken,{
+    if (result.status === ResultStatus.Unauthorized) return res.sendStatus(HttpStatus.Unauthorized)
+
+    res.cookie("refreshToken",result.data!.refreshToken,{
         httpOnly: true,
         secure: true,
     });
-    return res.status(HttpStatus.Success).send({accessToken:isLogin.data!.accessToken})
 
+    return res.status(HttpStatus.Success).send({accessToken:result.data!.accessToken})
 }

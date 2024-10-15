@@ -2,7 +2,7 @@ import request from "supertest";
 
 import {testingDtosCreator, UserDto} from "./testingDtosCreator";
 import {routersPaths} from "../../src/common/settings/paths";
-import {ADMIN_LOGIN, ADMIN_PASS} from "../../src/common/middleware/admin-middleware";
+import {ADMIN_LOGIN, ADMIN_PASS} from "../../../src/common/middleware/adminMiddleware";
 
 export const createUser = async (app: any, userDto?: UserDto) => {
 

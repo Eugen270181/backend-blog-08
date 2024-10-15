@@ -31,6 +31,7 @@
   "scripts": {
     "watch": "tsc -w",
     "dev": "nodemon --inspect dist/index.js",
+    "start": "concurrently \"yarn dev\" \"yarn watch\"",
     "test:e2e": "jest --config jest-e2e.json --runInBand --detectOpenHandles --forceExit",
     "test:integration": "jest --config jest-integration.json --runInBand --detectOpenHandles --forceExit",
     "coverage": "jest --coverage"
@@ -41,6 +42,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/mongodb-memory-server": "^2.3.0",
     "@types/node": "^18.11.9",
+    "concurrently": "^9.0.1",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1"
   }

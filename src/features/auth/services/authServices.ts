@@ -8,32 +8,55 @@ import {IdType} from "../../../common/types/id.type";
 import {nodemailerServices} from "../../../common/adapters/nodemailerServices";
 import {User} from "../../users/classes/user.class";
 import {CreateUserInputModel} from "../../users/types/input/createUserInput.type";
-import {WithId} from "mongodb";
+import {ObjectId, WithId} from "mongodb";
 import {UserDbModel} from "../../users/types/userDb.model";
 import {LoginSuccessOutputModel} from "../types/output/loginSuccessOutput.model";
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns/add';
 import {appConfig} from "../../../common/settings/config";
 
+type extLoginSuccessOutputModel = LoginSuccessOutputModel & {refreshToken:string}
 export const authServices = {
+    async generateTokens(userId:ObjectId){
+        const result = new ResultClass<extLoginSuccessOutputModel>()
+        //если данные для входа валидны, то генеирруем токены для пользователя по его id
+        const accessToken = await jwtServices.createToken(userId.toString(),appConfig.AT_SECRET,appConfig.AT_TIME)
+        const refreshToken = await jwtServices.createToken(userId.toString(),appConfig.RT_SECRET,appConfig.RT_TIME)
+        //записываем дату создания RT по user в соответ объект соотв коллекции бд
+        const iatRT = (await jwtServices.decodeToken(refreshToken) as {iat?:number}).iat
+        if (!iatRT) {
+            result.status = ResultStatus.CancelledAction;
+            result.addError('Sorry, something wrong with creation|decode refreshToken, try login later','refreshToken')
+            return result
+        }
+        const isUpdateIatRTSec = await usersRepository.updateIatRTSec(userId,iatRT)
+        if (!isUpdateIatRTSec) {
+            result.status = ResultStatus.CancelledAction;
+            result.addError('Sorry, something wrong with update iat refreshToken, try login later','refreshToken')
+            return result
+        }
+        result.status = ResultStatus.Success
+        result.data = {accessToken,refreshToken}
+
+        return result
+    },
     async loginUser(login:LoginInputModel) {
-        const result = new ResultClass<LoginSuccessOutputModel>()
+        const result = new ResultClass<extLoginSuccessOutputModel>()
         const {loginOrEmail, password} = login
-        const user=await this.checkUserCredentials(loginOrEmail, password)
+        const user= await this.checkUserCredentials(loginOrEmail, password)
         //если логин или пароль не верны или не существуют
         if (user.status !== ResultStatus.Success) {
             result.status = ResultStatus.Unauthorized
             result.addError('Wrong credentials','loginOrEmail|password')
             return result
         }
-        //если данные для входа валидны, то генеирруем токен для пользователя по его id
-        const accessToken = await jwtServices.createToken(user.data!._id.toString(),appConfig.AT_SECRET,appConfig.AT_TIME)
-        const refreshToken = await jwtServices.createToken(user.data!._id.toString(),appConfig.RT_SECRET,appConfig.RT_TIME)
-        //возвращаем статус успех и сам токен в объекте
-        result.status = ResultStatus.Success
-        result.data = {accessToken,refreshToken}
-
-        return result
+        //если данные для входа валидны, то генеирруем токены для пользователя по его id
+        return this.generateTokens(user.data!._id)
+    },
+    async logoutUser(refreshToken: string) {
+        const isRTValid= await this.checkRefreshToken(refreshToken)
+        if (!isRTValid.data) return false
+        return usersRepository.updateIatRTSec(new ObjectId(isRTValid.data.id),0)
     },
     async registerUser(user:CreateUserInputModel) {
         const {login, password, email} = user
@@ -63,7 +86,7 @@ export const authServices = {
     async checkAccessToken(authHeader: string) {
         const [type, token] = authHeader.split(" ")
         const result = new ResultClass<IdType>()
-        const userId = await jwtServices.verifyToken(token)
+        const userId = await jwtServices.verifyToken(token, appConfig.AT_SECRET)
 
         if (userId) {
             const user = await usersRepository.getUserById(userId.id)
@@ -71,6 +94,30 @@ export const authServices = {
         }
 
         return result
+    },
+    async checkRefreshToken(refreshToken: string) {
+        const result = new ResultClass<IdType>()
+        const userId = await jwtServices.verifyToken(refreshToken, appConfig.RT_SECRET)
+
+        if (userId) {
+            const user = await usersRepository.getUserById(userId.id)
+            if (user) {
+                const reqIatRTSec = (await jwtServices.decodeToken(refreshToken) as {iat?:number}).iat
+                if (reqIatRTSec && reqIatRTSec===user.iatRTSec) {
+                    result.data = userId;
+                    result.status = ResultStatus.Success
+                }
+            }
+        }
+        return result
+    },
+    async refreshTokens(refreshToken: string){
+        const result = new ResultClass<extLoginSuccessOutputModel>()
+        const userId = (await this.checkRefreshToken(refreshToken)).data
+
+        if(!userId) return result
+
+        return this.generateTokens(new ObjectId(userId.id))
     },
     async checkUserCredentials(loginOrEmail: string, password: string){
         const result = new ResultClass<WithId<UserDbModel>>()
@@ -132,7 +179,7 @@ export const authServices = {
             return result
         }
         const newConfirmationCode = randomUUID()
-        const newConfirmationDate =add( new Date(), { hours: 1, minutes: 30 } )
+        const newConfirmationDate =add( new Date(), { hours: +appConfig.EMAIL_TIME } )
         const isUpdateConfirmationCode = await usersRepository.setConfirmationCode(user._id,newConfirmationCode,newConfirmationDate)
         if (!isUpdateConfirmationCode) {
             result.addError('Something wrong with activate your account, try later','email')

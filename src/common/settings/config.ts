@@ -18,6 +18,7 @@ export const appConfig = {
     DB_TYPE: process.env.DB_TYPE as string,
     EMAIL: process.env.EMAIL as string,
     EMAIL_PASS: process.env.EMAIL_PASS as string,
+    EMAIL_TIME: process.env.EMAIL_TIME || '1', //in hours
 }
 //console.log(process.env.MONGO_URL)
 // console.log(process.env.ADMIN)

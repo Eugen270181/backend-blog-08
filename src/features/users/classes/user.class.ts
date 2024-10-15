@@ -6,7 +6,7 @@ export class User {
     email: string;
     passwordHash: string;
     createdAt: Date;
-    expirationRTDate: Date;
+    iatRTSec: Number;
     emailConfirmation: {
         confirmationCode: string;
         expirationDate: Date;
@@ -18,7 +18,7 @@ export class User {
         this.email = email
         this.passwordHash = hash
         this.createdAt = new Date()
-        this.expirationRTDate = new Date()
+        this.iatRTSec = 0
         this.emailConfirmation = {
             expirationDate: add( new Date(), { hours: 1, minutes: 30 } ),
             confirmationCode: randomUUID(),
